@@ -201,7 +201,6 @@ public class EnrollJDBC {
         Statement stmt = con.createStatement();
         String students = "SELECT sid, sname, sex, birthdate, gpa FROM student";
         StringBuilder output = new StringBuilder("sid, sname, sex, birthdate, gpa\n");
-
         ResultSet rst = stmt.executeQuery(students);
         String last = null;
         while (rst.next()) {
@@ -290,25 +289,29 @@ public class EnrollJDBC {
         // to output string
     }
 
-    /**
+    /*
      * Returns a ResultSet with a row containing the computed GPA (named as gpa) for
      * a given student id.
      * You must use a PreparedStatement.
      * 
      * @return
-     *         ResultSet containing computed GPA
+     * ResultSet containing computed GPA
      */
     public ResultSet computeGPA(String studentId) throws SQLException {
-        // TODO: Use a PreparedStatement
-        return null;
+        String gpaInfo = "SELECT AVG(grade) as gpa FROM enroll WHERE sid = ?";
+        PreparedStatement ps = con.prepareStatement(gpaInfo, ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
+        ps.setString(1, studentId);
+        ResultSet rst = ps.executeQuery(); // Use the PreparedStatement to execute the query.
+        return rst;
     }
 
-    /**
+    /*
      * Inserts a student into the databases.
      * You must use a PreparedStatement. Return the PreparedStatement.
      * 
      * @return
-     *         PreparedStatement used for command
+     * PreparedStatement used for command
      */
     public PreparedStatement addStudent(String studentId, String studentName, String sex, java.util.Date birthDate)
             throws SQLException {
