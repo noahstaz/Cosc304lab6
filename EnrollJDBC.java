@@ -201,20 +201,23 @@ public class EnrollJDBC {
         Statement stmt = con.createStatement();
         String students = "SELECT sid, sname, sex, birthdate, gpa FROM student";
         StringBuilder output = new StringBuilder("sid, sname, sex, birthdate, gpa\n");
-        ResultSet rst = stmt.executeQuery(); 
-        String last = null; 
-        int count = 0; 
+        
+        ResultSet rst = stmt.executeQuery(students);
+        String last = null;
+        int count = 0;
         while (rst.next()) {
             String current = rst.getString(1);
             if (last == null || !last.equals(current)) {
                 last = current;
-                output.append(current).append(", ").append(rst.getString(2)).append("\n");
+                output.append(current).append(", ").append(rst.getString(2)).append(", ")
+                      .append(rst.getString(3)).append(", ").append(rst.getString(4)).append(", ")
+                      .append(rst.getString(5)).append("\n");
             }
         }
-
         // Use a PreparedStatement for this query.
         // TODO: Traverse ResultSet and use StringBuilder.append() to add columns/rows
-        return "";
+
+        return output.toString();
     }
 
     /**
