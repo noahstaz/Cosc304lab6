@@ -201,22 +201,21 @@ public class EnrollJDBC {
         Statement stmt = con.createStatement();
         String students = "SELECT sid, sname, sex, birthdate, gpa FROM student";
         StringBuilder output = new StringBuilder("sid, sname, sex, birthdate, gpa\n");
-        
+
         ResultSet rst = stmt.executeQuery(students);
         String last = null;
-        int count = 0;
         while (rst.next()) {
-            String current = rst.getString(1);
-            if (last == null || !last.equals(current)) {
-                last = current;
+            String current = rst.getString(1); // bridget
+            if (last == null || !last.equals(current)) { // !last.equals(current) = gets rid of duplicates
+                last = current; // last = owen
                 output.append(current).append(", ").append(rst.getString(2)).append(", ")
-                      .append(rst.getString(3)).append(", ").append(rst.getString(4)).append(", ")
-                      .append(rst.getString(5)).append("\n");
+                        .append(rst.getString(3)).append(", ").append(rst.getString(4)).append(", ")
+                        .append(rst.getString(5)).append("\n");
             }
         }
         // Use a PreparedStatement for this query.
         // TODO: Traverse ResultSet and use StringBuilder.append() to add columns/rows
-
+        output.setLength(output.length() - 1);
         return output.toString();
     }
 
@@ -266,9 +265,29 @@ public class EnrollJDBC {
      */
     public String listCourseStudents(String courseNum) throws SQLException {
         // Use a PreparedStatement for this query.
+        String studentinfo = "SELECT S.sid, S.sname, E.cnum, E.secnum FROM student S LEFT OUTER JOIN enroll E ON S.sid = E.sid WHERE E.cnum = ?";
+        StringBuilder output = new StringBuilder("Student Id, Student Name, Course Number, Section Number\n");
+        String last = null;
+
+        try (PreparedStatement ps = con.prepareStatement(studentinfo)) {
+            ps.setString(1, courseNum);
+            try (ResultSet rst = ps.executeQuery()) {
+                while (rst.next()) {
+                    String current = rst.getString(1);
+                    if (last == null || !last.equals(current)) {
+                        last = current;
+                        output.append(current).append(", ").append(rst.getString(2)).append(", ")
+                                .append(rst.getString(3)).append(", ").append(rst.getString(4)).append("\n");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // or handle this more gracefully, depending on your application's needs
+        }
+        output.setLength(output.length() - 1);
+        return output.toString();
         // TODO: Traverse ResultSet and use StringBuilder.append() to add columns/rows
         // to output string
-        return "";
     }
 
     /**
