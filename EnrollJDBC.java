@@ -409,11 +409,13 @@ public class EnrollJDBC {
      */
     public PreparedStatement updateStudentGPA(String studentId) throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
-        String sql = "UPDATE student SET gpa = AVWHERE sid = ?";
+        String sql = "UPDATE student SET gpa = AVG(grade) WHERE sid = ?"; // Outerjoin of enroll onto student so I can
+                                                                          // get the individual grades and get their
+                                                                          // average
         PreparedStatement ps = con.prepareStatement(sql,
-        ResultSet.TYPE_SCROLL_INSENSITIVE,
-        ResultSet.CONCUR_READ_ONLY);
-        
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
+
         ps.executeUpdate();
         return ps;
     }
@@ -450,8 +452,18 @@ public class EnrollJDBC {
     public PreparedStatement updateStudentMark(String studentId, String courseNum, String sectionNum, double grade)
             throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
-        String sql = "UPDATE student SET gpa = ?"
-        return null;
+        String sql = "UPDATE student SET sid = ?, cnum = ?, secnum = ?, gpa = ? WHERE sid = ?";
+        PreparedStatement ps = con.prepareStatement(sql,
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
+        ps.setString(1, studentId);
+        ps.setString(2, courseNum);
+        ps.setString(3, sectionNum);
+        ps.setDouble(4, grade);
+        ps.setString(5, studentId);
+        ps.executeUpdate();
+        return ps;
+
     }
 
     /**
