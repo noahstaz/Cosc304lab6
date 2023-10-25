@@ -316,7 +316,16 @@ public class EnrollJDBC {
     public PreparedStatement addStudent(String studentId, String studentName, String sex, java.util.Date birthDate)
             throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
-        return null;
+        String addingstudent = "INSERT INTO student(sid, sname, sex, birthdate, gpa) VALUES (?, ?, ?, ?, ?)";
+        PreparedStatement pst = con.prepareStatement(addingstudent);
+        pst.setString(1, studentId);
+        pst.setString(2, studentName);
+        pst.setString(3, sex);
+        java.sql.Date date = new java.sql.Date(birthDate.getTime());
+        pst.setDate(4, date);
+        pst.setString(5, null);
+        pst.executeUpdate();
+        return pst;
     }
 
     /**
@@ -330,7 +339,11 @@ public class EnrollJDBC {
      */
     public PreparedStatement deleteStudent(String studentId) throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
-        return null;
+        String sql = "DELETE FROM student WHERE sid = ?";
+        PreparedStatement pst = con.prepareStatement(sql);
+        pst.setString(1, studentId);
+        pst.executeUpdate();
+        return pst;
     }
 
     /**
@@ -344,8 +357,21 @@ public class EnrollJDBC {
      */
     public PreparedStatement updateStudent(String studentId, String studentName, String sex, java.util.Date birthDate,
             double gpa) throws SQLException {
+        String sql = "UPDATE student SET sname = ?, sex = ?, birthdate = ?, gpa = ? WHERE sid = ?";
+        PreparedStatement pst = con.prepareStatement(sql);
+        pst.setString(1, studentName);
+        pst.setString(2, sex);
+        if (birthDate != null) {
+            java.sql.Date date = new java.sql.Date(birthDate.getTime());
+            pst.setDate(3, date);
+        } else {
+            pst.setNull(3, java.sql.Types.DATE);
+        }
+        pst.setDouble(4, gpa);
+        pst.setString(5, studentId);
+        pst.executeUpdate();
         // TODO: Use a PreparedStatement and return it at the end of the method
-        return null;
+        return pst;
     }
 
     /**
@@ -360,7 +386,16 @@ public class EnrollJDBC {
     public PreparedStatement newEnroll(String studentId, String courseNum, String sectionNum, Double grade)
             throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
-        return null;
+        String gpaInfo = "INSERT INTO enroll(sid, cnum, secnum, grade) VALUES(?, ?, ?, ?)";
+        PreparedStatement ps = con.prepareStatement(gpaInfo,
+                ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
+        ps.setString(1, studentId);
+        ps.setString(2, courseNum);
+        ps.setString(3, sectionNum);
+        ps.setDouble(4, grade);
+        ps.executeUpdate();
+        return ps;
     }
 
     /**
@@ -374,7 +409,13 @@ public class EnrollJDBC {
      */
     public PreparedStatement updateStudentGPA(String studentId) throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
-        return null;
+        String sql = "UPDATE student SET gpa = AVWHERE sid = ?";
+        PreparedStatement ps = con.prepareStatement(sql,
+        ResultSet.TYPE_SCROLL_INSENSITIVE,
+        ResultSet.CONCUR_READ_ONLY);
+        
+        ps.executeUpdate();
+        return ps;
     }
 
     /**
@@ -389,6 +430,10 @@ public class EnrollJDBC {
     public PreparedStatement removeStudentFromSection(String studentId, String courseNum, String sectionNum)
             throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
+        String sql = "DELETE FROM section WHERE sid = ?";
+        PreparedStatement pst = con.prepareStatement(sql);
+        pst.setString(1, studentId);
+        pst.executeUpdate();
         return null;
     }
 
@@ -405,6 +450,7 @@ public class EnrollJDBC {
     public PreparedStatement updateStudentMark(String studentId, String courseNum, String sectionNum, double grade)
             throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
+        String sql = "UPDATE student SET gpa = ?"
         return null;
     }
 
