@@ -409,13 +409,12 @@ public class EnrollJDBC {
      */
     public PreparedStatement updateStudentGPA(String studentId) throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
-        String sql = "UPDATE student SET gpa = AVG(grade) WHERE sid = ?"; // Outerjoin of enroll onto student so I can
-                                                                          // get the individual grades and get their
-                                                                          // average
+        String sql = "UPDATE student S LEFT JOIN enroll E ON S.sid = E.sid SET S.gpa = (SELECT AVG(grade) FROM enroll WHERE sid = ?) WHERE S.sid = ?"; // Outerjoin
         PreparedStatement ps = con.prepareStatement(sql,
                 ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY);
-
+        ps.setString(1, studentId);
+        ps.setString(2, studentId);
         ps.executeUpdate();
         return ps;
     }
@@ -432,11 +431,13 @@ public class EnrollJDBC {
     public PreparedStatement removeStudentFromSection(String studentId, String courseNum, String sectionNum)
             throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
-        String sql = "DELETE FROM section WHERE sid = ?";
+        String sql = "DELETE FROM enroll WHERE secnum = ? AND sid = ? AND cnum = ?";
         PreparedStatement pst = con.prepareStatement(sql);
-        pst.setString(1, studentId);
+        pst.setString(1, sectionNum);
+        pst.setString(2, studentId);
+        pst.setString(3, courseNum);
         pst.executeUpdate();
-        return null;
+        return pst;
     }
 
     /**
@@ -452,18 +453,21 @@ public class EnrollJDBC {
     public PreparedStatement updateStudentMark(String studentId, String courseNum, String sectionNum, double grade)
             throws SQLException {
         // TODO: Use a PreparedStatement and return it at the end of the method
-        String sql = "UPDATE student SET sid = ?, cnum = ?, secnum = ?, gpa = ? WHERE sid = ?";
-        PreparedStatement ps = con.prepareStatement(sql,
-                ResultSet.TYPE_SCROLL_INSENSITIVE,
-                ResultSet.CONCUR_READ_ONLY);
-        ps.setString(1, studentId);
-        ps.setString(2, courseNum);
-        ps.setString(3, sectionNum);
-        ps.setDouble(4, grade);
-        ps.setString(5, studentId);
-        ps.executeUpdate();
-        return ps;
 
+        String sql1 = "UPDATE enroll SET grade = ? WHERE sid = ? AND cnum = ? AND secnum = ?";
+        PreparedStatement ps1 = con.prepareStatement(sql1);
+        ps1.setDouble(1, grade);
+        ps1.setString(2, studentId);
+        ps1.setString(3, courseNum);
+        ps1.setString(4, sectionNum);
+        ps1.executeUpdate();
+
+        String sql2 = "UPDATE student SET gpa = (SELECT AVG(grade) FROM enroll WHERE sid = ?) WHERE sid = ?";
+        PreparedStatement ps2 = con.prepareStatement(sql2);
+        ps2.setString(1, studentId);
+        ps2.setString(2, studentId);
+        ps2.executeUpdate();
+        return ps2;
     }
 
     /**
@@ -477,8 +481,12 @@ public class EnrollJDBC {
      */
     public ResultSet query1() throws SQLException {
         System.out.println("\nExecuting query #1.");
-        // TODO: Execute the SQL query and return a ResultSet.
-        return null;
+        // TODO: Execute the SQL query and return a ResultSet
+        String sql = "SELECT S.sid, S.sname FROM student S LEFT OUTER JOIN enroll E ON S.sid = E.sid WHERE secnum IS NULL";
+        PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
+        ResultSet rst = ps.executeQuery(); // Use the PreparedStatement to execute the query.
+        return rst;
     }
 
     /**
@@ -496,7 +504,11 @@ public class EnrollJDBC {
     public ResultSet query2() throws SQLException {
         System.out.println("\nExecuting query #2.");
         // TODO: Execute the SQL query and return a ResultSet.
-        return null;
+        String sql = "SELECT S.sid, S.sname, numcourses, ROUND(S.gpa, 6) FROM student as S LEFT OUTER JOIN(SELECT E.sid, COUNT(secnum) as numcourses, ROUND(AVG(grade), 6)  FROM enroll as E GROUP BY E.sid HAVING ROUND(AVG(grade), 6)>3.1 OR numcourses=0) AS subquery ON S.sid = subquery.sid WHERE birthdate > DATE('1992-03-15') ORDER BY S.gpa DESC, S.sname ASC LIMIT 5";
+        PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
+        ResultSet rst = ps.executeQuery(); // Use the PreparedStatement to execute the query.
+        return rst;
     }
 
     /**
