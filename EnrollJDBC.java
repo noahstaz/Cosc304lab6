@@ -450,25 +450,21 @@ public class EnrollJDBC {
      * @return
      *         PreparedStatement used for command
      */
-    public PreparedStatement updateStudentMark(String studentId, String courseNum, String sectionNum, double grade)
-            throws SQLException {
-        // TODO: Use a PreparedStatement and return it at the end of the method
+    public PreparedStatement updateStudentMark(String studentId, String courseNum, String sectionNum, double grade) throws SQLException
+ {
+     // TODO: Use a PreparedStatement and return it at the end of the method
+        String sql = "UPDATE enroll SET grade = ? " +
+                        "WHERE sid = ? AND cnum = ? AND secnum = ?;";
+        PreparedStatement ps = con.prepareStatement(sql);
 
-        String sql1 = "UPDATE enroll SET grade = ? WHERE sid = ? AND cnum = ? AND secnum = ?";
-        PreparedStatement ps1 = con.prepareStatement(sql1);
-        ps1.setDouble(1, grade);
-        ps1.setString(2, studentId);
-        ps1.setString(3, courseNum);
-        ps1.setString(4, sectionNum);
-        ps1.executeUpdate();
+        ps.setDouble(1, grade);
+        ps.setString(2, studentId);
+        ps.setString(3, courseNum);
+        ps.setString(4, sectionNum);
 
-        String sql2 = "UPDATE student SET gpa = (SELECT AVG(grade) FROM enroll WHERE sid = ?) WHERE sid = ?";
-        PreparedStatement ps2 = con.prepareStatement(sql2);
-        ps2.setString(1, studentId);
-        ps2.setString(2, studentId);
-        ps2.executeUpdate();
-        return ps2;
-    }
+        ps.executeUpdate();
+     return ps;
+ }
 
     /**
      * Return the list of students (id and name) that have not registered in any
@@ -504,7 +500,7 @@ public class EnrollJDBC {
     public ResultSet query2() throws SQLException {
         System.out.println("\nExecuting query #2.");
         // TODO: Execute the SQL query and return a ResultSet.
-        String sql = "SELECT S.sid, S.sname, numcourses, ROUND(S.gpa, 6) FROM student as S LEFT OUTER JOIN(SELECT E.sid, COUNT(secnum) as numcourses, ROUND(AVG(grade), 6)  FROM enroll as E GROUP BY E.sid HAVING ROUND(AVG(grade), 6)>3.1 OR numcourses=0) AS subquery ON S.sid = subquery.sid WHERE birthdate > DATE('1992-03-15') ORDER BY S.gpa DESC, S.sname ASC LIMIT 5";
+        String sql = "SELECT S.sid, S.sname, IFNULL(numcourses, 0) as numcourses, IFNULL(calculated_gpa, null) as gpa FROM student as S LEFT OUTER JOIN (SELECT E.sid, COUNT(secnum) as numcourses, AVG(grade) as calculated_gpa FROM enroll as E GROUP BY E.sid) AS subquery ON S.sid = subquery.sid WHERE S.birthdate > DATE('1992-03-15') AND (IFNULL(gpa, 0) > 3.1 OR numcourses IS NULL OR ROUND(S.gpa, 6) > 3.1) ORDER BY ROUND(S.gpa, 6) DESC, S.sname ASC LIMIT 5";
         PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
                 ResultSet.CONCUR_READ_ONLY);
         ResultSet rst = ps.executeQuery(); // Use the PreparedStatement to execute the query.
@@ -530,7 +526,12 @@ public class EnrollJDBC {
     public ResultSet query3() throws SQLException {
         System.out.println("\nExecuting query #3.");
         // TODO: Execute the SQL query and return a ResultSet.
-        return null;
+        String sql = "SELECT \n C.cnum, COUNT(DISTINCT Sec.secnum) as numsections, COUNT(E.sid) as numstudents, ROUND(AVG(E.grade), 6) as avggrade, COUNT(DISTINCT Sec.pname) as numprofs FROM course as C LEFT JOIN section as Sec ON C.cnum = Sec.cnum LEFT JOIN enroll as E ON C.cnum = E.cnum AND Sec.secnum = E.secnum WHERE C.dname IN ('Computer Science', 'Chemistry') AND Sec.pname IS NOT NULL GROUP BY C.cnum HAVING numprofs > 0 ORDER BY C.cnum;";
+        // TODO: Execute the SQL query and return a ResultSet.
+        PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE,
+                ResultSet.CONCUR_READ_ONLY);
+        ResultSet rst = ps.executeQuery(); // Use the PreparedStatement to execute the query.
+        return rst;
     }
 
     /**
@@ -547,8 +548,10 @@ public class EnrollJDBC {
      */
     public ResultSet query4() throws SQLException {
         System.out.println("\nExecuting query #4.");
-        // TODO: Execute the SQL query and return a ResultSet.
-        return null;
+        String sql = "WITH SectionAverages AS (SELECT cnum, secnum, AVG(grade) as avg_grade FROM enroll GROUP BY cnum, secnum), StudentsAboveAverage AS (SELECT e.sid, e.cnum FROM enroll e JOIN SectionAverages sa ON e.cnum = sa.cnum AND e.secnum = sa.secnum WHERE e.grade > sa.avg_grade) SELECT s.sid, s.sname, COUNT(sa.cnum) as numhigher FROM student s JOIN StudentsAboveAverage sa ON s.sid = sa.sid GROUP BY s.sid, s.sname HAVING COUNT(sa.cnum) >= 2 ORDER BY numhigher DESC, s.sname ASC LIMIT 5";
+        PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        ResultSet rst = ps.executeQuery();
+        return rst;
     }
 
     /*
