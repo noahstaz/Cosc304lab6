@@ -4,7 +4,7 @@ EnrollJDBC.java - JDBC program for accessing and updating an enrollment database
 Lab Assignment #6
 
 Student name: 	Noah Stasuik, Tina Liu
-University id:	44083343, ()
+University id:	44083343, 29490737
 */
 
 import java.io.File;
@@ -454,16 +454,19 @@ public class EnrollJDBC {
  {
      // TODO: Use a PreparedStatement and return it at the end of the method
         String sql = "UPDATE enroll SET grade = ? " +
-                        "WHERE sid = ? AND cnum = ? AND secnum = ?;";
+       "WHERE sid = ? AND cnum = ? AND secnum = ?;";
         PreparedStatement ps = con.prepareStatement(sql);
-
-        ps.setDouble(1, grade);
+        Double newgrade = new Double(grade); 
+        if(newgrade == null) {
+            ps.setNull(3, java.sql.Types.NULL);
+        } else {
+            ps.setDouble(1, grade); 
+        }
         ps.setString(2, studentId);
         ps.setString(3, courseNum);
         ps.setString(4, sectionNum);
-
         ps.executeUpdate();
-     return ps;
+        return ps;
  }
 
     /**
